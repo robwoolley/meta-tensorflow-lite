@@ -9,7 +9,6 @@ TF_MAJOR = "${@(d.getVar('PV').split('.') + ['0', '0', '0'])[0]}"
 TF_MINOR = "${@(d.getVar('PV').split('.') + ['0', '0', '0'])[1]}"
 TF_PATCH = "${@(d.getVar('PV').split('.') + ['0', '0', '0'])[2]}"
 PV = "2.3.0"
-SRCREV_FORMAT = "litert_tensorflow"
 
 SRCREV_litert = "12d5852de049413709bb4afe5f54b79c2a9692a8"
 SRCREV_tensorflow = "a481b10260dfdf833a1b16007eead49c1d7febf3"
@@ -19,6 +18,7 @@ SRC_URI = "git://github.com/google-ai-edge/LiteRT.git;name=litert;branch=release
            file://0001-update_flatbuffers_ver_litert.patch \
            file://0002-only-enable-npu-backends-with-valid-headers.patch \
            file://0003-fix-abseil-bmi2-include-for-gcc-16.patch \
+           file://0004-tensor-make-the-examples-optional.patch \
            file://0001-update_flatbuffers_ver_tensorflow.patch;patchdir=${UNPACKDIR}/tensorflow \
            "
 
@@ -26,7 +26,7 @@ DEPENDS = " \
     flatbuffers-native \
 "
 
-inherit cmake
+inherit cmake litert-offline-deps
 
 # pthreadpool's Linux futex fallback expects SYS_futex, but riscv32 time64
 # syscall headers only expose SYS_futex_time64.
@@ -68,10 +68,10 @@ TENSORFLOW_TARGET_ARCH:intel-skylake-64 = "x86_64"
 EXTRA_OECMAKE:append = " \
     -DTFLITE_ENABLE_XNNPACK=ON \
     -DTFLITE_HOST_TOOLS_DIR=${WORKDIR}/recipe-sysroot-native/usr/bin/ \
-    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
     -DTENSORFLOW_SOURCE_DIR=${UNPACKDIR}/tensorflow \
     -DTENSORFLOW_TARGET_ARCH=${TENSORFLOW_TARGET_ARCH} \
     -DLITERT_ENABLE_NPU=OFF \
+    -DLITERT_BUILD_TENSOR_EXAMPLES=OFF \
     -DLITERT_ENABLE_QUALCOMM=OFF \
     -DLITERT_ENABLE_SAMSUNG=OFF \
     -DNEUROPILOT_HEADERS_DIR=${UNPACKDIR}/disabled-neuropilot \
@@ -79,8 +79,6 @@ EXTRA_OECMAKE:append = " \
     -DLITECORE_HEADERS_DIR=${UNPACKDIR}/disabled-litecore \
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 "
-
-do_configure[network] = "1"
 
 # cmake.bbclass maps every 32-bit ARM tune to the generic processor name
 # "arm". cpuinfo requires an ARM version (armv5-armv8) and otherwise omits

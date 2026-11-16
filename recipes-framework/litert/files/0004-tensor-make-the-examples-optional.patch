@@ -1,0 +1,39 @@
+From: Rob Woolley <rob.woolley@windriver.com>
+Subject: [PATCH] tensor: make the examples optional
+
+The segmentation example downloads a prebuilt GPU accelerator with
+file(DOWNLOAD) at configure time. Add LITERT_BUILD_TENSOR_EXAMPLES (default ON,
+so nothing changes) so that builds without network access can switch the
+examples off.
+
+Upstream-Status: Pending
+Signed-off-by: Rob Woolley <rob.woolley@windriver.com>
+---
+
+diff --git a/tensor/CMakeLists.txt b/tensor/CMakeLists.txt
+index 75201af81..aca0f0b66 100644
+--- a/tensor/CMakeLists.txt
++++ b/tensor/CMakeLists.txt
+@@ -120,10 +120,16 @@ target_link_libraries(litert_tensor_api_tflite_backend
+         absl::span
+ )
+ 
+-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/segmentation/CMakeLists.txt")
+-    add_subdirectory(examples/segmentation)
+-endif()
++option(LITERT_BUILD_TENSOR_EXAMPLES "Build the tensor API examples" ON)
+ 
+-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/gemma3/CMakeLists.txt")
+-    add_subdirectory(examples/gemma3)
++# The segmentation example downloads a prebuilt GPU accelerator at configure
++# time, so builds that must not use the network turn the examples off.
++if(LITERT_BUILD_TENSOR_EXAMPLES)
++    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/segmentation/CMakeLists.txt")
++        add_subdirectory(examples/segmentation)
++    endif()
++
++    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/gemma3/CMakeLists.txt")
++        add_subdirectory(examples/gemma3)
++    endif()
+ endif()
+\ No newline at end of file
