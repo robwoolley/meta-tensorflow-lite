@@ -25,7 +25,7 @@ SRC_URI:append:x86-64 = " \
     file://001-Set-CMAKE_POLICY_VERSION_MINIMUM-NEON2SSE.patch \
 "
 
-inherit cmake
+inherit cmake tensorflow-lite-offline-deps-bundled
 
 DEPENDS = " \
     libeigen \
@@ -71,16 +71,13 @@ TENSORFLOW_TARGET_ARCH:raspberrypi5 = "aarch64"
 TENSORFLOW_TARGET_ARCH:riscv32 = "riscv32"
 TENSORFLOW_TARGET_ARCH:riscv64 = "riscv64"
 
-# Note:
-# Download the submodule using FetchContent_Populate.
-# Therefore, turn off FETCHCONTENT_FULLY_DISCONNECTED.
+# The FetchContent dependencies are fetched in do_fetch by
+# tensorflow-lite-offline-deps.bbclass, which also sets
+# FETCHCONTENT_FULLY_DISCONNECTED=ON.
 EXTRA_OECMAKE:append = " \
-  -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
   -DTENSORFLOW_TARGET_ARCH=${TENSORFLOW_TARGET_ARCH} \
   -DTFLITE_HOST_TOOLS_DIR=${WORKDIR}/recipe-sysroot-native/usr/bin/ \
  "
-
-do_configure[network] = "1"
 
 do_configure:prepend() {
     rm -rf ${S}/tensorflow/lite/tools/cmake/modules/Findabsl.cmake

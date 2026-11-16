@@ -30,7 +30,12 @@ SRC_URI:append:x86-64 = " \
     file://001-Set-CMAKE_POLICY_VERSION_MINIMUM-NEON2SSE.patch \
 "
 
-inherit cmake
+inherit cmake tensorflow-lite-offline-deps-bundled
+
+# files/001-protobuf.cmake.patch moves TensorFlow Lite's protobuf from 90b73ac
+# to this revision (the generated example protos need headers that match the
+# protoc from protobuf-native); fetch the same one for the offline build.
+SRCREV_protobuf = "6e1998413a5bca7c058b85999667893f167434bc"
 
 DEPENDS = " \
     libeigen \
@@ -43,14 +48,13 @@ DEPENDS = " \
 OECMAKE_SOURCEPATH = "${S}/tensorflow/lite"
 OECMAKE_TARGET_COMPILE = "benchmark_model"
 
-# Note:
-# Download the submodule using FetchContent_Populate.
-# Therefore, turn off FETCHCONTENT_FULLY_DISCONNECTED.
+# The FetchContent dependencies are fetched in do_fetch by
+# tensorflow-lite-offline-deps.bbclass, which also sets
+# FETCHCONTENT_FULLY_DISCONNECTED=ON.
 EXTRA_OECMAKE:append = " \
     -DTFLITE_ENABLE_XNNPACK=OFF \
     -DTFLITE_HOST_TOOLS_DIR=${WORKDIR}/recipe-sysroot-native/usr/bin/ \
     -DTENSORFLOW_SOURCE_DIR=${S} \
-    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
     -DTENSORFLOW_TARGET_ARCH=${TENSORFLOW_TARGET_ARCH} \
 "
 
@@ -79,8 +83,6 @@ TENSORFLOW_TARGET_ARCH:raspberrypi4-64 = "aarch64"
 TENSORFLOW_TARGET_ARCH:raspberrypi5 = "aarch64"
 TENSORFLOW_TARGET_ARCH:riscv32 = "riscv32"
 TENSORFLOW_TARGET_ARCH:riscv64 = "riscv64"
-
-do_configure[network] = "1"
 
 do_configure:prepend() {
     rm -rf ${S}/tensorflow/lite/tools/cmake/modules/Findabsl.cmake

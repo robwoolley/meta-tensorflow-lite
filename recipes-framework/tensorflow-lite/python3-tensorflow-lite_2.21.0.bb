@@ -40,7 +40,7 @@ RDEPENDS:${PN} += " \
     python3-numpy \
 "
 
-inherit setuptools3 cmake
+inherit setuptools3 cmake tensorflow-lite-offline-deps-bundled
 
 TENSORFLOW_LITE_BUILD_DIR = "${S}/tensorflow/lite/tools/pip_package/gen/tflite_pip/python3"
 TENSORFLOW_LITE_DIR = "${S}/tensorflow/lite"
@@ -55,7 +55,6 @@ OECMAKE_TARGET_COMPILE　= "_pywrap_tensorflow_interpreter_wrapper"
 OECMAKE_C_FLAGS += "-I${PYTHON_INCLUDE_DIR} -I${PYBIND11_IN} -I${NUMPY_INCLUDE} ${TF_CXX_FLAGS}"
 OECMAKE_CXX_FLAGS += "-I${PYTHON_INCLUDE_DIR} -I${PYBIND11_INCLUDE} -I${NUMPY_INCLUDE} ${TF_CXX_FLAGS}"
 EXTRA_OECMAKE:append = " \
-    -DFETCHCONTENT_FULLY_DISCONNECTED=OFF \
     -DTFLITE_ENABLE_XNNPACK=OFF \
     -DTENSORFLOW_SOURCE_DIR=${S} \
     -DPython3_NumPy_INCLUDE_DIR=${NUMPY_INCLUDE} \
@@ -90,15 +89,13 @@ TENSORFLOW_TARGET_ARCH:raspberrypi5 = "aarch64"
 TENSORFLOW_TARGET_ARCH:riscv32 = "riscv32"
 TENSORFLOW_TARGET_ARCH:riscv64 = "riscv64"
 
-# Note:
-# Download the submodule using FetchContent_Populate.
-# Therefore, turn off FETCHCONTENT_FULLY_DISCONNECTED.
+# The FetchContent dependencies are fetched in do_fetch by
+# tensorflow-lite-offline-deps.bbclass, which also sets
+# FETCHCONTENT_FULLY_DISCONNECTED=ON.
 EXTRA_OECMAKE:append = " \
   -DTENSORFLOW_TARGET_ARCH=${TENSORFLOW_TARGET_ARCH} \
   -DTFLITE_HOST_TOOLS_DIR=${WORKDIR}/recipe-sysroot-native/usr/bin/ \
 "
-
-do_configure[network] = "1"
 
 do_configure:append() {
     if [ -e ${S}/tensorflow/lite/tools/pip_package/riscv32_pthread.patch ]; then
